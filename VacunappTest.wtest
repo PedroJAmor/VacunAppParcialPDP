@@ -180,10 +180,92 @@ describe "Tests de Costos" {
     const combineta = new Combineta(vacunas = [larussa30, paifer, astraLaVistaZeneca])
 
     assert.equals(8900, combineta.costo(persona))
+  }
+}
 
-    3500
-    3500
-    1600
+//Punto 3
 
+describe "Test de elecciones de vacuna" {
+  method crearPersona() = new Persona(anticuerpos=1000,
+    edad=22,
+    inmunidad = calendarioStub.hoy(),
+    calendario = calendarioStub,
+    nombre = "")
+
+  test "Test de cualquierosa paiser" {
+    const persona = self.crearPersona()
+    persona.preferenciaVacuna(cualquierosa)
+
+    assert.that(persona.elige(paifer))
+  }
+
+  test "Test de cualquierosa astraLaVistaZeneca" {
+    const persona = self.crearPersona()
+    persona.preferenciaVacuna(cualquierosa)
+
+    assert.that(persona.elige(astraLaVistaZeneca))
+  }
+
+  test "Test de anticuerposa, elige astraLaVistaZeneca" {
+    const persona = self.crearPersona()
+    persona.anticuerpos(95000)
+    persona.preferenciaVacuna(anticuerposa)
+
+    assert.that(persona.elige(astraLaVistaZeneca))
+  }
+
+  test "Test de anticuerposa, elige paifer" {
+    const persona = self.crearPersona()
+    persona.anticuerpos(15000)
+    persona.preferenciaVacuna(anticuerposa)
+
+    assert.that(persona.elige(paifer))
+  }
+
+  test "Test de anticuerposa, elige larussa 15" {
+    const persona = self.crearPersona()
+    persona.anticuerpos(10000)
+    persona.preferenciaVacuna(anticuerposa)
+
+    assert.that(persona.elige(new Larussa(multiplicador = 15)))
+  }
+
+  test "Test de inmunidosasFijas, no elige larussa 5/3" {
+    const persona = self.crearPersona()
+    persona.preferenciaVacuna(inmunidosaFija)
+
+    assert.notThat(persona.elige(new Larussa(multiplicador = 15))) 
+  }
+
+  test "Test de inmunidosasFijas, elige paifer" {
+    const persona = self.crearPersona()
+    persona.preferenciaVacuna(inmunidosaFija)
+
+    assert.that(persona.elige(paifer)) 
+  }
+
+  test "Test de inmunidosasFijas, astraLaVistaZeneca" {
+    const persona = self.crearPersona()
+    persona.preferenciaVacuna(inmunidosaFija)
+
+    assert.that(persona.elige(astraLaVistaZeneca)) 
+  }
+
+  test "Test de inmunidosasVariable elige paiser" {
+    const persona = self.crearPersona()
+    persona.edad(40)
+    const inmunidosa = new InmunidosaVariable(meses = 6)
+    persona.preferenciaVacuna(inmunidosa)
+
+    assert.that(persona.elige(paifer)) 
+  }
+
+  test "Test de inmunidosasVariable no elige paiser" {
+    const persona = self.crearPersona()
+    persona.edad(41)
+    const inmunidosa = new InmunidosaVariable(meses = 6)
+    persona.preferenciaVacuna(inmunidosa)
+
+    assert.notThat(persona.elige(paifer)) 
   }
 }

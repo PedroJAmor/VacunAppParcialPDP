@@ -7,9 +7,13 @@ class Persona{
   var property nombre
   var property edad
   var property calendario = calendarioHoy
+  var property provincia = "Buenos Aires"
+  const provinciasEspeciales =["Tierra del Fuego", "Santa Cruz", "Neuquén"]
 
   var property inmunidad
   var property anticuerpos    
+
+  method esEspecial() = provinciasEspeciales.contains(provincia)
 }
 
 
@@ -21,6 +25,13 @@ class Vacuna{
 
   method aumentarAnticuerpos(persona)
   method aumentarInmunidad(persona) 
+
+  method costo(persona) = self.costoDeVacuna(persona) + self.costoParticular(persona)
+
+  method costoDeVacuna(persona) = 1000 + 50 * self.aniosMasDe30(persona)
+  method aniosMasDe30(persona) = (persona.edad() - 30).max(0)
+
+  method costoParticular(persona)
 }
 object paifer inherits Vacuna{
 
@@ -34,6 +45,8 @@ object paifer inherits Vacuna{
     const fechaInmunidad = persona.calendario().hoy().plusMonths(meses)
     persona.inmunidad(fechaInmunidad) 
   }
+
+  override method costoParticular(persona) = if(persona.edad() < 18) 400 else 100
 }
 
 class Larussa inherits Vacuna{
@@ -48,6 +61,8 @@ class Larussa inherits Vacuna{
     const fechaInmunidad = new Date(day = 03, month = 03, year = 2024)
     persona.inmunidad(fechaInmunidad)
   }
+  override
+  override method costoParticular(persona) = 100 * multiplicador.min(20)
 }
 
 object astraLaVistaZeneca inherits Vacuna{
@@ -61,6 +76,8 @@ object astraLaVistaZeneca inherits Vacuna{
     const _anticuerpos = persona.anticuerpos() + 10000
     persona.anticuerpos(_anticuerpos)
   }
+
+  override method costoParticular(persona) = if(persona.esEspecial()) 2000 else 0
 }
 
 class Combineta inherits Vacuna{
@@ -102,6 +119,8 @@ class Combineta inherits Vacuna{
     vacuna.aplicar(personaPrueba)
     return personaPrueba.inmunidad()
   } 
+  override method costoDeVacuna(persona) = vacunas.sum{vacuna => vacuna.costo(persona)}
+  override method costoParticular(persona) = 100 * vacunas.size()
 }
 
 //Punto 2

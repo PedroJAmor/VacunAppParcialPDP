@@ -106,3 +106,84 @@ describe "Tests de Paifer" {
   }
 }
 
+// punto 2 
+
+describe "Tests de Costos" {
+  method crearPersona() = new Persona(anticuerpos=1000,
+    edad=22,
+    inmunidad = calendarioStub.hoy(),
+    calendario = calendarioStub,
+    nombre = "")
+
+  test "Test de Paifer para menor" {
+    const persona = self.crearPersona()
+    persona.edad(17)
+
+    assert.equals(1400, paifer.costo(persona))
+  }
+
+  test "Test de Paifer para mayor, menor de 30" {
+    const persona = self.crearPersona()
+    persona.edad(18)
+
+    assert.equals(1100, paifer.costo(persona))
+  }
+
+  test "Test de Paifer para mayor, 30" {
+    const persona = self.crearPersona()
+    persona.edad(30)
+
+    assert.equals(1100, paifer.costo(persona))
+  }
+
+  test "Test de Paifer para mayor, mayor de 30" {
+    const persona = self.crearPersona()
+    persona.edad(35)
+
+    assert.equals(1350, paifer.costo(persona))
+  }
+
+  test "Test de Larussa 10" {
+    const persona = self.crearPersona()
+    const larussa10 = new Larussa(multiplicador = 10)
+
+    assert.equals(2000, larussa10.costo(persona))
+  }
+
+  test "Test de Larussa +20" {
+    const persona = self.crearPersona()
+    persona.edad(40)
+    const larussa30 = new Larussa(multiplicador = 30)
+
+    assert.equals(3500, larussa30.costo(persona))
+  }
+
+  test "Test de AstraLaVistaZeneca persona especial" {
+    const persona = self.crearPersona()
+    persona.provincia("Tierra del Fuego")
+
+    assert.equals(3000, astraLaVistaZeneca.costo(persona))
+  }
+  
+  test "Test de AstraLaVistaZeneca persona no especial" {
+    const persona = self.crearPersona()
+    
+    assert.equals(1000, astraLaVistaZeneca.costo(persona))
+  }
+
+  test "Test de Combineta" {
+    const persona = self.crearPersona()
+    persona.provincia("Neuquén")
+    persona.edad(40)
+    const larussa30 = new Larussa(multiplicador = 30)
+
+    const combineta = new Combineta(vacunas = [larussa30, paifer, astraLaVistaZeneca])
+
+    assert.equals(8900, combineta.costo(persona))
+
+    3500
+    3500
+    1600
+
+  }
+}

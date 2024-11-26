@@ -1,0 +1,108 @@
+import Vacunapp.*
+
+object calendarioStub {
+  var property _day = 1
+  var property _month = 1
+  var property _year = 2024
+  method hoy() = new Date(day = _day, month = _month, year = _year)
+}
+
+describe "Tests de Paifer" {
+
+  method crearPersona() = new Persona(anticuerpos=1000,
+  edad=22,
+  inmunidad = calendarioStub.hoy(),
+  calendario = calendarioStub,
+  nombre = "")
+
+  test "Test de Paifer mayor de 40" {
+    const persona = self.crearPersona()
+    persona.edad(41)
+    const fechaInmunidad = new Date(day = 1, month = 7, year = 2024)
+    paifer.aplicar(persona)
+
+    assert.equals(10000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+
+  test "Test de Paifer menor o igual de 40" {
+    const persona = self.crearPersona()
+    persona.edad(40)
+    const fechaInmunidad = new Date(day = 1, month = 10, year = 2024)
+    paifer.aplicar(persona)
+
+    assert.equals(10000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+
+  test "Test de larussa menor a 20" {
+    const persona = self.crearPersona()
+    const larussa15 = new Larussa(multiplicador = 15)
+    const fechaInmunidad = new Date(day = 3, month = 3, year = 2024)
+
+    larussa15.aplicar(persona)
+
+    assert.equals(15000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+
+  test "Test de larussa mayor a 20" {
+    const persona = self.crearPersona()
+    const larussa25 = new Larussa(multiplicador = 25)
+    const fechaInmunidad = new Date(day = 3, month = 3, year = 2024)
+
+    larussa25.aplicar(persona)
+
+    assert.equals(20000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+
+  test "Test de AstraLaVistaZeneca nombre par"{
+    const persona = self.crearPersona()
+    persona.nombre("ParP")
+    const fechaInmunidad = new Date(day=1, month = 7, year = 2024)
+
+    astraLaVistaZeneca.aplicar(persona)
+    
+    assert.equals(11000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+
+  test "Test de AstraLaVistaZeneca nombre impar"{
+    const persona = self.crearPersona()
+    persona.nombre("Impar")
+    const fechaInmunidad = new Date(day=1, month = 8, year = 2024)
+
+    astraLaVistaZeneca.aplicar(persona)
+    
+    assert.equals(11000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+
+  test "Test de Combineta 1" {
+    const persona = self.crearPersona()
+    persona.edad(41)
+    persona.nombre("impar")
+    const fechaInmunidad = new Date(day = 1, year = 2024, month = 8)
+    const combineta = new Combineta(vacunas = [paifer, astraLaVistaZeneca])
+
+    combineta.aplicar(persona)
+    
+    assert.equals(10000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+
+    test "Test de Combineta 2" {
+    const persona = self.crearPersona()
+    persona.edad(40)
+    persona.nombre("impar")
+    const fechaInmunidad = new Date(day = 1, year = 2024, month = 10)
+    const combineta = new Combineta(vacunas = [paifer, astraLaVistaZeneca, new Larussa(multiplicador = 1)])
+
+    combineta.aplicar(persona)
+    
+    assert.equals(1000, persona.anticuerpos())
+    assert.equals(fechaInmunidad, persona.inmunidad())
+  }
+}
+

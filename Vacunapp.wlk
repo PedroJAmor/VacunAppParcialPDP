@@ -195,9 +195,7 @@ object planDeVacunacion{
   const listaDePersonas = []
   const listaDeVacunas = [paifer, larussa2, larussa5, astraLaVistaZeneca, combineta]
 
-  method costoTotal() = self.costosPorVacunas().sum()
-
-  method costosPorVacunas() = listaDePersonas.map{persona => persona.eligeLaMasBarata(listaDeVacunas)}
+  method costoTotal() = listaDePersonas.sum{persona => persona.eligeLaMasBarata(listaDeVacunas)}
 }
 
 //Punto 5

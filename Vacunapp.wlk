@@ -2,22 +2,24 @@ object calendarioHoy{
   method hoy() = new Date()
 }
 
-
 class Persona{
   var property nombre
   var property edad
   var property calendario = calendarioHoy
   var property provincia = "Buenos Aires"
-  const provinciasEspeciales =["Tierra del Fuego", "Santa Cruz", "Neuquén"]
+  const provinciasEspeciales = ["Tierra del Fuego", "Santa Cruz", "Neuquén"]
   var property preferenciaVacuna = cualquierosa
+  const historialDeVacunas = []
 
-  var property inmunidad
-  var property anticuerpos    
+  var property inmunidad //es una fecha
+  var property anticuerpos 
+
+  method nombrePar() = nombre.length().even() 
 
   method elige(vacuna) = preferenciaVacuna.elige(vacuna, self)
   method esEspecial() = provinciasEspeciales.contains(provincia)
 
-  method personaAux() = new Persona(
+  method personaAux() = new Persona( //se crea para
     nombre = nombre,
     edad = edad,
     inmunidad = inmunidad,
@@ -25,17 +27,45 @@ class Persona{
     calendario = calendario
   )
 
-}
+  method multiplicarAnticuerpos(multiplicador) {
+    anticuerpos = anticuerpos * multiplicador
+  }
 
+  method aumentarAnticuerpos(_anticuerpos) {
+    anticuerpos += _anticuerpos
+  }
+
+  method darMesesInmunidad(meses){
+    const fechaInmunidad = calendario.hoy().plusMonths(meses) 
+    inmunidad = fechaInmunidad
+  } 
+
+  method eligeLaMasBarata(vacunas){
+    return self.costoDeVacunas(vacunas).minIfEmpty(0)
+  }
+  
+  method costoDeVacunas(vacunas) = self.vacunasQueElige(vacunas).map{vacuna => vacuna.costo(self)}
+  method vacunasQueElige(vacunas) = vacunas.filter{vacuna => self.elige(vacuna)}
+
+  method agregarVacunaHistoral(vacuna){
+    historialDeVacunas.add(vacuna)
+  }
+}
 
 class Vacuna{
   method aplicar(persona){
+    self.validarAplicacion(persona)
     self.aumentarAnticuerpos(persona)
-    self.aumentarInmunidad(persona)
+    self.otorgarInmunidad(persona)
+    persona.agregarVacunaHistoral(self)
+  }
+
+  method validarAplicacion(persona){
+    if(!persona.elige(self)) throw new DomainException(message = "La vacuna solicitada no es aplicable para la persona")
   }
 
   method aumentarAnticuerpos(persona)
-  method aumentarInmunidad(persona) 
+  method otorgarInmunidad(persona)
 
   method costo(persona) = self.costoDeVacuna(persona) + self.costoParticular(persona)
 
@@ -44,17 +74,16 @@ class Vacuna{
 
   method costoParticular(persona)
 }
+
 object paifer inherits Vacuna{
 
   override method aumentarAnticuerpos(persona){
-    const _anticuerpos = persona.anticuerpos() * 10
-    persona.anticuerpos(_anticuerpos)
+    persona.multiplicarAnticuerpos(10)
   } 
   
-  override method aumentarInmunidad(persona){
+  override method otorgarInmunidad(persona){
     const meses = if (persona.edad() > 40) 6 else 9
-    const fechaInmunidad = persona.calendario().hoy().plusMonths(meses)
-    persona.inmunidad(fechaInmunidad) 
+    persona.darMesesInmunidad(meses)
   }
 
   override method costoParticular(persona) = if(persona.edad() < 18) 400 else 100
@@ -64,11 +93,10 @@ class Larussa inherits Vacuna{
   const multiplicador
 
   override method aumentarAnticuerpos(persona) {
-    const _anticuerpos = multiplicador.min(20) * persona.anticuerpos()
-    persona.anticuerpos(_anticuerpos)
+    persona.multiplicarAnticuerpos(multiplicador.min(20))
   }
 
-  override method aumentarInmunidad(persona) {
+  override method otorgarInmunidad(persona) {
     const fechaInmunidad = new Date(day = 03, month = 03, year = 2024)
     persona.inmunidad(fechaInmunidad)
   }
@@ -76,24 +104,22 @@ class Larussa inherits Vacuna{
 }
 
 object astraLaVistaZeneca inherits Vacuna{
-  override method aumentarInmunidad(persona){
-    const meses = if (persona.nombre().length().even()) 6 else 7
-    const fechaInmunidad = persona.calendario().hoy().plusMonths(meses)
-    persona.inmunidad(fechaInmunidad)
+  override method otorgarInmunidad(persona){
+    const meses = if (persona.nombrePar()) 6 else 7
+    persona.darMesesInmunidad(meses)
   }
 
   override method aumentarAnticuerpos(persona){
-    const _anticuerpos = persona.anticuerpos() + 10000
-    persona.anticuerpos(_anticuerpos)
+    persona.aumentarAnticuerpos(10000)
   }
 
   override method costoParticular(persona) = if(persona.esEspecial()) 2000 else 0
 }
 
 class Combineta inherits Vacuna{
-  const vacunas = [] 
+  const vacunas = []
 
-  override method aumentarInmunidad(persona){
+  override method otorgarInmunidad(persona){
     const _inmunidad = self.mayorInmunidad(persona)
     persona.inmunidad(_inmunidad)
   } 
@@ -102,14 +128,6 @@ class Combineta inherits Vacuna{
     const _anticuerpos = self.menorAnticuerpos(persona)
     persona.anticuerpos(_anticuerpos)
   }
-
-  method personaAux(persona) = new Persona(
-    nombre = persona.nombre(),
-    edad = persona.edad(),
-    inmunidad = persona.inmunidad(),
-    anticuerpos = persona.anticuerpos(),
-    calendario = persona.calendario()
-  )
 
   method menorAnticuerpos(persona) = self.anticuerposAplicada(persona).min()
   method anticuerposAplicada(persona) = vacunas.map{vacuna => self.anticuerposVacunaAplicada(persona, vacuna)}
@@ -120,7 +138,6 @@ class Combineta inherits Vacuna{
     return personaAux.anticuerpos()
   }
 
-
   method mayorInmunidad(persona) = self.inmunidadAplicada(persona).max()
   method inmunidadAplicada(persona) = vacunas.map{vacuna => self.inmunidadVacunaAplicada(persona, vacuna)}
 
@@ -129,26 +146,17 @@ class Combineta inherits Vacuna{
     vacuna.aplicar(personaAux)
     return personaAux.inmunidad()
   } 
+  
   override method costoDeVacuna(persona) = vacunas.sum{vacuna => vacuna.costo(persona)}
   override method costoParticular(persona) = 100 * vacunas.size()
 }
 
 //Punto 3
-
 object cualquierosa {
   method elige(vacuna, persona) = true
 }
 
 object anticuerposa{
-
-  method personaAux(persona) = new Persona(
-    nombre = persona.nombre(),
-    edad = persona.edad(),
-    inmunidad = persona.inmunidad(),
-    anticuerpos = persona.anticuerpos(),
-    calendario = persona.calendario()
-  )
-
   method elige(vacuna, persona) {
     const personaAux = persona.personaAux()
     vacuna.aplicar(personaAux)
@@ -175,27 +183,23 @@ class InmunidosaVariable{
     vacuna.aplicar(personaAux)
     return personaAux.inmunidad() > fecha
   }
-
 }
 
 
+//Punto 4
+const larussa2 = new Larussa(multiplicador = 2)
+const larussa5 = new Larussa(multiplicador = 5)
+const combineta = new Combineta(vacunas = [larussa2, paifer])
 
+object planDeVacunacion{
+  const listaDePersonas = []
+  const listaDeVacunas = [paifer, larussa2, larussa5, astraLaVistaZeneca, combineta]
 
+  method costoTotal() = self.costosPorVacunas().sum()
 
-
-/*
-object calendarioStub {
-  var property _day = 1
-  var property _month = 1
-  var property _year = 2024
-  method hoy() = new Date(day = _day, month = _month, year = _year)
+  method costosPorVacunas() = listaDePersonas.map{persona => persona.eligeLaMasBarata(listaDeVacunas)}
 }
 
-object fixtureP{
-  method crearPersona() = new Persona(anticuerpos=1000,
-    edad=22,
-    inmunidad = new Date(),
-    calendario = calendarioStub,
-    nombre = "")
-}
-*/
+//Punto 5
+
+
